@@ -1,5 +1,7 @@
 package io.will.webfluxdemo.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -22,23 +24,21 @@ import java.util.Map;
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         ServerHttpResponse response = exchange.getResponse();
         
-        // Log the error with detailed information
         logError(exchange, ex);
         
         // Set response status
         response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
         // Don't set content type here as it may conflict with Spring's handling
         
-        // Create error response
         Map<String, Object> errorResponse = createErrorResponse(exchange, ex);
         String errorJson = convertToJson(errorResponse);
         
-        // Write error response
         DataBuffer buffer = response.bufferFactory().wrap(errorJson.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
     }
@@ -71,7 +71,6 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         errorResponse.put("message", ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred");
         errorResponse.put("exception", ex.getClass().getSimpleName());
         
-        // Add request ID if available
         String requestId = exchange.getRequest().getHeaders().getFirst("X-Request-ID");
         if (requestId != null) {
             errorResponse.put("requestId", requestId);
@@ -81,7 +80,16 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
     }
     
     private String convertToJson(Map<String, Object> errorResponse) {
-        // Simple JSON conversion - in production, use Jackson ObjectMapper
+        try {
+            return objectMapper.writeValueAsString(errorResponse);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to serialize error response to JSON", e);
+            // Fallback to simple JSON format if Jackson fails
+            return createFallbackJson(errorResponse);
+        }
+    }
+    
+    private String createFallbackJson(Map<String, Object> errorResponse) {
         StringBuilder json = new StringBuilder("{");
         boolean first = true;
         for (Map.Entry<String, Object> entry : errorResponse.entrySet()) {

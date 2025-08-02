@@ -2,7 +2,7 @@
 
 ## 🎯 Problem Solved
 
-You identified a critical production issue: **errors occurring but not being logged in the backend**. This guide provides a comprehensive solution for global error handling and logging in Spring WebFlux applications.
+**Errors occurring but not being logged in the backend**. This guide provides a comprehensive solution for global error handling and logging in Spring WebFlux applications.
 
 ## 🏗️ Solution Architecture
 
