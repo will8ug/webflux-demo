@@ -1,6 +1,7 @@
 package io.will.webfluxdemo.integration;
 
 import io.will.webfluxdemo.model.User;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ class UserIntegrationTest {
     private WebTestClient webTestClient;
 
     @Test
+    @Tag("Basic")
     void getAllUsers_ShouldReturnAllUsers() {
         webTestClient.get()
                 .uri("/api/users")
@@ -35,6 +37,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("Basic")
     void getUserById_WithValidId_ShouldReturnUser() {
         webTestClient.get()
                 .uri("/api/users/1")
@@ -46,6 +49,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("Basic")
     void getUserById_WithInvalidId_ShouldReturnNotFound() {
         webTestClient.get()
                 .uri("/api/users/999")
@@ -55,6 +59,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("Basic")
     void createUser_ShouldReturnCreatedUser() {
         User newUser = new User(4L, "David", "david@example.com");
         
@@ -69,6 +74,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("Basic")
     void deleteUser_ShouldReturnSuccess() {
         webTestClient.delete()
                 .uri("/api/users/1")
@@ -77,6 +83,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("Basic")
     void getUserById_ShouldHandleConcurrentRequests() {
         webTestClient.get()
                 .uri("/api/users/1")
@@ -96,6 +103,7 @@ class UserIntegrationTest {
     // Integration tests corresponding to the curl commands in ERROR_HANDLING_GUIDE.md
 
     @Test
+    @Tag("ErrorHandling")
     void testError_ShouldReturn500WithCustomExceptionHandler() {
         webTestClient.get()
                 .uri("/api/users/test-error")
@@ -114,6 +122,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("ErrorHandling")
     void testBadRequest_ShouldReturn400WithCustomExceptionHandler() {
         webTestClient.get()
                 .uri("/api/users/test-bad-request")
@@ -132,6 +141,7 @@ class UserIntegrationTest {
     }
 
     @Test
+    @Tag("ErrorHandling")
     void nonexistentEndpoint_ShouldReturn404WithGlobalExceptionHandler() {
         webTestClient.get()
                 .uri("/nonexistent-endpoint")

@@ -77,16 +77,19 @@ The above curl commands have been converted to automated integration tests in `s
 
 ```java
 @Test
+@Tag("ErrorHandling")
 void testError_ShouldReturn500WithCustomExceptionHandler() {
     // Tests /api/users/test-error endpoint
 }
 
 @Test
+@Tag("ErrorHandling")
 void testBadRequest_ShouldReturn400WithCustomExceptionHandler() {
     // Tests /api/users/test-bad-request endpoint
 }
 
 @Test
+@Tag("ErrorHandling")
 void nonexistentEndpoint_ShouldReturn404WithGlobalExceptionHandler() {
     // Tests /nonexistent-endpoint endpoint
 }
@@ -96,6 +99,9 @@ void nonexistentEndpoint_ShouldReturn404WithGlobalExceptionHandler() {
 ```bash
 # Run only integration tests
 ./mvnw integration-test
+
+# Run only error handling integration tests
+./mvnw integration-test -Dgroups=ErrorHandling
 
 # Run all tests (unit + integration)
 ./mvnw verify
