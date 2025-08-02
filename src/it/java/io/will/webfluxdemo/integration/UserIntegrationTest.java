@@ -92,4 +92,60 @@ class UserIntegrationTest {
                 .expectBody(User.class)
                 .isEqualTo(new User(2L, "Bob", "bob@example.com"));
     }
+
+    // Integration tests corresponding to the curl commands in ERROR_HANDLING_GUIDE.md
+
+    @Test
+    void testError_ShouldReturn500WithCustomExceptionHandler() {
+        webTestClient.get()
+                .uri("/api/users/test-error")
+                .exchange()
+                .expectStatus().isEqualTo(500)
+                .expectHeader().contentType("application/json")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(500)
+                .jsonPath("$.error").isEqualTo("Internal Server Error")
+                .jsonPath("$.exception").isEqualTo("RuntimeException")
+                .jsonPath("$.message").isEqualTo("This is a test error for demonstration")
+                .jsonPath("$.path").isEqualTo("/api/users/test-error")
+                .jsonPath("$.method").isEqualTo("GET")
+                .jsonPath("$.requestId").exists()
+                .jsonPath("$.timestamp").exists();
+    }
+
+    @Test
+    void testBadRequest_ShouldReturn400WithCustomExceptionHandler() {
+        webTestClient.get()
+                .uri("/api/users/test-bad-request")
+                .exchange()
+                .expectStatus().isEqualTo(400)
+                .expectHeader().contentType("application/json")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(400)
+                .jsonPath("$.error").isEqualTo("Bad Request")
+                .jsonPath("$.exception").isEqualTo("IllegalArgumentException")
+                .jsonPath("$.message").isEqualTo("Invalid parameter provided")
+                .jsonPath("$.path").isEqualTo("/api/users/test-bad-request")
+                .jsonPath("$.method").isEqualTo("GET")
+                .jsonPath("$.requestId").exists()
+                .jsonPath("$.timestamp").exists();
+    }
+
+    @Test
+    void nonexistentEndpoint_ShouldReturn404WithGlobalExceptionHandler() {
+        webTestClient.get()
+                .uri("/nonexistent-endpoint")
+                .exchange()
+                .expectStatus().isEqualTo(500) // GlobalExceptionHandler returns 500 for all unhandled exceptions
+                .expectHeader().contentType("application/json")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(500)
+                .jsonPath("$.error").isEqualTo("Internal Server Error")
+                .jsonPath("$.exception").isEqualTo("ResponseStatusException")
+                .jsonPath("$.message").isEqualTo("404 NOT_FOUND")
+                .jsonPath("$.path").isEqualTo("/nonexistent-endpoint")
+                .jsonPath("$.method").isEqualTo("GET")
+                .jsonPath("$.requestId").exists()
+                .jsonPath("$.timestamp").exists();
+    }
 } 

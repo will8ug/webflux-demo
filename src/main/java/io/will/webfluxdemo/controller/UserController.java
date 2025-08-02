@@ -42,4 +42,14 @@ public class UserController {
     public Mono<Void> deleteUser(@PathVariable Long id) {
         return Mono.empty();
     }
-} 
+
+    @GetMapping("/test-error")
+    public Mono<String> testError() {
+        throw new RuntimeException("This is a test error for demonstration");
+    }
+
+    @GetMapping("/test-bad-request")
+    public Mono<String> testBadRequest() {
+        throw new IllegalArgumentException("Invalid parameter provided");
+    }
+}
