@@ -142,11 +142,11 @@ class UserIntegrationTest {
 
     @Test
     @Tag("ErrorHandling")
-    void nonexistentEndpoint_ShouldReturn404WithGlobalExceptionHandler() {
+    void nonexistentEndpoint_ShouldReturn500WithNotFoundInMessage() {
         webTestClient.get()
                 .uri("/nonexistent-endpoint")
                 .exchange()
-                .expectStatus().isEqualTo(500) // GlobalExceptionHandler returns 500 for all unhandled exceptions
+                .expectStatus().isEqualTo(500)
                 .expectHeader().contentType("application/json")
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(500)
