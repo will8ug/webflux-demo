@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: webflux-demo
+
+server:
+  port: 9001
+
+# Logging configuration
+logging:
+  level:
+    io.will.webfluxdemo: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/webflux-demo.log
+    max-size: 10MB
+    max-history: 30
