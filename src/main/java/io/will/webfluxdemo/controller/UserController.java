@@ -1,6 +1,7 @@
 package io.will.webfluxdemo.controller;
 
 import io.will.webfluxdemo.model.User;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,10 +20,11 @@ public class UserController {
         new User(3L, "Charlie", "charlie@example.com")
     );
 
-    @GetMapping
+    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<User> getAllUsers() {
         return Flux.fromIterable(users)
-                .delayElements(Duration.ofMillis(100));
+                .delayElements(Duration.ofMillis(100))
+                .doOnNext(user -> System.out.println("Streaming user: " + user.getName()));
     }
 
     @GetMapping("/{id}")
