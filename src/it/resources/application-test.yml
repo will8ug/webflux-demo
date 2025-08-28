@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    io.will.webfluxdemo: DEBUG
+    org.springframework.web: DEBUG
+
+# Disable security for integration tests
+app:
+  security:
+    enabled: false

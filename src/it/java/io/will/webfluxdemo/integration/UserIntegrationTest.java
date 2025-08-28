@@ -26,7 +26,7 @@ class UserIntegrationTest {
                 .uri("/api/users")
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentType("application/json")
+                .expectHeader().contentType("text/event-stream;charset=UTF-8")
                 .expectBodyList(User.class)
                 .hasSize(3)
                 .contains(

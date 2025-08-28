@@ -2,6 +2,11 @@ spring:
   application:
     name: webflux-demo
 
+# Feature toggles
+app:
+  security:
+    enabled: true
+
 server:
   port: 9001
 
