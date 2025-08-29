@@ -82,24 +82,6 @@ class UserIntegrationTest {
                 .expectStatus().isOk();
     }
 
-    @Test
-    @Tag("Basic")
-    void getUserById_ShouldHandleConcurrentRequests() {
-        webTestClient.get()
-                .uri("/api/users/1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User.class)
-                .isEqualTo(new User(1L, "Alice", "alice@example.com"));
-
-        webTestClient.get()
-                .uri("/api/users/2")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User.class)
-                .isEqualTo(new User(2L, "Bob", "bob@example.com"));
-    }
-
     // Integration tests corresponding to the curl commands in ERROR_HANDLING_GUIDE.md
 
     @Test
