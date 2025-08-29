@@ -12,7 +12,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 class WebFluxPerformanceTest {
 
     @Autowired
