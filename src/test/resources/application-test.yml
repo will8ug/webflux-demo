@@ -1,0 +1,8 @@
+logging:
+  level:
+    io.will.webfluxdemo: DEBUG
+    org.springframework.web: DEBUG
+
+app:
+  security:
+    enabled: true

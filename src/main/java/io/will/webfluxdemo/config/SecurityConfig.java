@@ -19,7 +19,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
-    @Value("${app.security.enabled:true}")
+    @Value("${app.security.enabled:false}")
     private boolean securityEnabled;
 
     @Bean

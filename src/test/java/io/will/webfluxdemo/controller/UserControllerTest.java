@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import io.will.webfluxdemo.config.SecurityConfig;
 
 @WebFluxTest(UserController.class)
 @Import(SecurityConfig.class)
+@ActiveProfiles("test")
 class UserControllerTest {
 
     @Autowired
