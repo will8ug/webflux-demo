@@ -45,6 +45,10 @@ public class SecurityConfig {
                 .pathMatchers("/api/users/{id}").hasRole("USER")
                 .pathMatchers("/api/users/test-error").hasRole("ADMIN")
                 .pathMatchers("/api/users/test-bad-request").hasRole("ADMIN")
+                // Export endpoints - require admin role for long-running operations
+                .pathMatchers("/api/users/export/**").hasRole("ADMIN")
+                .pathMatchers("/api/users/export-reactive/**").hasRole("ADMIN")
+                .pathMatchers("/api/users/export-batch/**").hasRole("ADMIN")
                 .pathMatchers("/api/auth/protected").hasRole("USER")
                 .pathMatchers("/api/auth/admin").hasRole("ADMIN")
                 .pathMatchers("/api/auth/me").hasRole("USER")
