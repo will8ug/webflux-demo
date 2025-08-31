@@ -69,6 +69,7 @@ public class UserController {
      * Uses SSE because the operation takes significant time (7+ seconds)
      * Client can maintain connection and get result when ready
      */
+    @CrossOrigin(origins = {"file:///", "null"})
     @GetMapping(path = "/export/{requestId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Mono<ExportResult> exportUsers(@PathVariable Long requestId) {
         return dataExportService.exportAsync(requestId);
@@ -78,6 +79,7 @@ public class UserController {
      * Alternative reactive export implementation
      * Shows fully non-blocking reactive processing
      */
+    @CrossOrigin(origins = {"file:///", "null"})
     @GetMapping(path = "/export-reactive/{requestId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Mono<ExportResult> exportUsersReactive(@PathVariable Long requestId) {
         return dataExportService.exportAsyncReactive(requestId);
@@ -87,6 +89,7 @@ public class UserController {
      * Batch export with progress tracking
      * Suitable for very large datasets
      */
+    @CrossOrigin(origins = {"file:///", "null"})
     @GetMapping(path = "/export-batch/{requestId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Mono<ExportResult> exportUsersBatch(@PathVariable Long requestId) {
         return dataExportService.exportWithProgress(requestId);

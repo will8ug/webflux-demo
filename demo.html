@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebFlux SSE Export Demo</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .export-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.processing {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        .timestamp {
+            color: #63b3ed;
+        }
+        .request-id {
+            color: #f6e05e;
+        }
+        .export-result {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .export-result pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 WebFlux Long-Running Export Demo</h1>
+        <p>This demo shows how <strong>Mono + Server-Sent Events</strong> works perfectly for long-running operations!</p>
+        
+        <div class="export-section">
+            <h3>🔄 Standard Export (7+ seconds)</h3>
+            <p>Simulates database query → data processing → file generation</p>
+            <button id="startExport" class="button">Start Export</button>
+            <button id="cancelExport" class="button" disabled>Cancel</button>
+            <div id="exportStatus"></div>
+            <div class="progress">
+                <div id="exportProgress" class="progress-bar"></div>
+            </div>
+            <div id="exportResult"></div>
+        </div>
+
+        <div class="export-section">
+            <h3>⚡ Reactive Export</h3>
+            <p>Shows reactive processing with delays</p>
+            <button id="startReactiveExport" class="button">Start Reactive Export</button>
+            <div id="reactiveStatus"></div>
+            <div id="reactiveResult"></div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Batch Export</h3>
+            <p>Demonstrates batch processing with progress</p>
+            <button id="startBatchExport" class="button">Start Batch Export</button>
+            <div id="batchStatus"></div>
+            <div id="batchResult"></div>
+        </div>
+
+        <div class="export-section">
+            <h3>📝 Request Logs</h3>
+            <div id="logOutput" class="log">
+                <div>[INFO] Ready to start export operations...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEventSource = null;
+
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const typePrefix = type === 'error' ? '[ERROR]' : type === 'success' ? '[SUCCESS]' : '[INFO]';
+            
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="timestamp">${timestamp}</span> ${typePrefix} ${message}`;
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="export-result">
+                    <h4>✅ Export Completed!</h4>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                    <p><strong>Download:</strong> <a href="${result.downloadUrl}" target="_blank">${result.fileName}</a></p>
+                </div>
+            `;
+        }
+
+        function startExport(endpoint, statusElementId, resultElementId, progressElementId = null) {
+            if (currentEventSource) {
+                currentEventSource.close();
+            }
+
+            const requestId = Math.floor(Math.random() * 100000);
+            const url = `http://localhost:9001/api/users/${endpoint}/${requestId}`;
+            
+            log(`Starting export: ${endpoint} with ID: <span class="request-id">${requestId}</span>`);
+            updateStatus(statusElementId, `🔄 Starting export (ID: ${requestId})...`, 'processing');
+
+            if (progressElementId) {
+                document.getElementById(progressElementId).style.width = '0%';
+            }
+
+            currentEventSource = new EventSource(url);
+            let startTime = Date.now();
+
+            currentEventSource.onopen = function(event) {
+                log(`✅ SSE connection established for ${endpoint}`);
+                if (progressElementId) {
+                    document.getElementById(progressElementId).style.width = '20%';
+                }
+            };
+
+            currentEventSource.onmessage = function(event) {
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                log(`📦 Received export result after ${duration}s`);
+                
+                try {
+                    const result = JSON.parse(event.data);
+                    log(`📄 File generated: ${result.fileName} (${result.fileSizeBytes} bytes)`, 'success');
+                    
+                    updateStatus(statusElementId, 
+                        `✅ Export completed in ${duration}s! File: ${result.fileName}`, 'success');
+                    showResult(resultElementId, result);
+                    
+                    if (progressElementId) {
+                        document.getElementById(progressElementId).style.width = '100%';
+                    }
+                } catch (e) {
+                    log(`❌ Failed to parse result: ${e.message}`, 'error');
+                    updateStatus(statusElementId, '❌ Failed to parse export result', 'error');
+                }
+                
+                currentEventSource.close();
+                currentEventSource = null;
+                document.getElementById('cancelExport').disabled = true;
+                document.getElementById('startExport').disabled = false;
+            };
+
+            currentEventSource.onerror = function(event) {
+                log(`❌ SSE connection error for ${endpoint}`, 'error');
+                updateStatus(statusElementId, '❌ Export failed - connection error', 'error');
+                currentEventSource.close();
+                currentEventSource = null;
+                document.getElementById('cancelExport').disabled = true;
+                document.getElementById('startExport').disabled = false;
+            };
+
+            // Update progress simulation for main export
+            if (progressElementId && endpoint === 'export') {
+                let progress = 20;
+                const progressInterval = setInterval(() => {
+                    if (progress < 90 && currentEventSource) {
+                        progress += 10;
+                        document.getElementById(progressElementId).style.width = progress + '%';
+                    } else {
+                        clearInterval(progressInterval);
+                    }
+                }, 1000);
+            }
+
+            // Enable cancel button for main export
+            if (endpoint === 'export') {
+                document.getElementById('cancelExport').disabled = false;
+                document.getElementById('startExport').disabled = true;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('startExport').addEventListener('click', () => {
+            startExport('export', 'exportStatus', 'exportResult', 'exportProgress');
+        });
+
+        document.getElementById('cancelExport').addEventListener('click', () => {
+            if (currentEventSource) {
+                currentEventSource.close();
+                currentEventSource = null;
+                log('🛑 Export cancelled by user');
+                updateStatus('exportStatus', '🛑 Export cancelled', 'error');
+                document.getElementById('cancelExport').disabled = true;
+                document.getElementById('startExport').disabled = false;
+                document.getElementById('exportProgress').style.width = '0%';
+            }
+        });
+
+        document.getElementById('startReactiveExport').addEventListener('click', () => {
+            startExport('export-reactive', 'reactiveStatus', 'reactiveResult');
+        });
+
+        document.getElementById('startBatchExport').addEventListener('click', () => {
+            startExport('export-batch', 'batchStatus', 'batchResult');
+        });
+
+        // Initial log
+        log('🚀 WebFlux SSE Demo loaded. Server running on port 9001');
+        log('💡 Click any export button to see Mono + SSE in action!');
+    </script>
+</body>
+</html>
